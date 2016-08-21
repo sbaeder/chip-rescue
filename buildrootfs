@@ -1,0 +1,21 @@
+#!/bin/sh -eux
+rm -rf tmp
+multistrap -f multistrap.conf
+cp tmp/boot/vmlinuz-4.4.11-ntc tmp/boot/zImage
+cp tmp/usr/lib/linux-image-4.4.11-ntc/sun5i-r8-chip.dtb tmp/boot/sun5i-r8-chip.dtb
+# %%% mv tmp/sbin/init tmp/sbin/init.stock
+# %%% cp init.template tmp/sbin/init
+mknod -m 666 tmp/dev/null    c 1 3
+mknod -m 666 tmp/dev/zero    c 1 5
+mknod -m 666 tmp/dev/full    c 1 7
+mknod -m 666 tmp/dev/random  c 1 8
+mknod -m 666 tmp/dev/urandom c 1 9
+mknod -m 666 tmp/dev/tty     c 5 0
+mknod -m 666 tmp/dev/ptmx    c 5 2
+mkdir tmp/dev/pts
+mkdir tmp/dev/shm
+ln -s /proc/self/fd   tmp/dev/fd
+ln -s /proc/self/fd/0 tmp/dev/stdin
+ln -s /proc/self/fd/1 tmp/dev/stdout
+ln -s /proc/self/fd/2 tmp/dev/stderr
+mkfs.ubifs -r tmp -m 0x4000 -e 0x1f8000 -c 2000 -o rootfs.ubifs

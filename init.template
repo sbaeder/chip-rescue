@@ -1,0 +1,7 @@
+#!/bin/sh
+{
+	mv /sbin/init.stock /sbin/init &&
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg --configure -a &&
+	passwd &&
+	exec /sbin/init
+} || exec /bin/sh

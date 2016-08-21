@@ -1,0 +1,9 @@
+#!/bin/sh -eux
+sunxi-fel -v \
+	spl prebuilt/sunxi-spl.bin \
+	write 0x4a000000 prebuilt/u-boot-dtb.bin \
+	write 0x43100000 enter-fastboot.scr \
+	exe 0x4a000000
+fastboot -i 0x1f3a erase UBI
+fastboot -i 0x1f3a flash UBI rootfs.ubi.sparse
+# fastboot -i 0x1f3a continue
