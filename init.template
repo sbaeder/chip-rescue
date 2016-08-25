@@ -1,7 +1,11 @@
 #!/bin/sh
 {
+	exec <>/dev/ttyGS0 >&0 2>&0
+	export PATH
 	mv /sbin/init.stock /sbin/init &&
+	/var/lib/dpkg/info/base-passwd.preinst install &&
+	/var/lib/dpkg/info/dash.preinst install &&
 	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg --configure -a &&
 	passwd &&
 	exec /sbin/init
-} || exec /bin/sh
+} || exec sh
