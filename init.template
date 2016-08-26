@@ -2,10 +2,16 @@
 {
 	exec <>/dev/ttyGS0 >&0 2>&0
 	export PATH
+	while true; do
+		echo "This is not a modem. Type 'start' to start."
+		read -r line
+		test "$line" = start && break
+	done
 	mv /sbin/init.stock /sbin/init &&
 	/var/lib/dpkg/info/base-passwd.preinst install &&
 	/var/lib/dpkg/info/dash.preinst install &&
 	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg --configure -a &&
+	systemctl enable getty@ttyGS0 &&
 	passwd &&
 	exec /sbin/init
 } || exec sh

@@ -13,7 +13,14 @@ rootfs.ubi: rootfs.ubifs ubinize.cfg
 	ubinize -o $@ -p 0x200000 -m 0x4000 ubinize.cfg
 
 rootfs.ubifs: multistrap.conf init.template
-	fakeroot ./buildrootfs
+	fakeroot -s rootfs.db ./buildrootfs
+
+enter-fakeroot:
+	fakeroot -i rootfs.db -s rootfs.db
+
+do-update-init:
+	fakeroot -i rootfs.db -s rootfs.db ./update-init
+	make rootfs.ubi.sparse
 
 enter-fastboot.scr: enter-fastboot.cmd
 	mkimage -A arm -T script -C none -n "enter fastboot" -d $< $@
@@ -29,4 +36,4 @@ prebuilt:
 print-latest:
 	curl "$(DL_URL)/$(BRANCH)/$(FLAVOR)/latest"
 
-.PHONY: print-latest
+.PHONY: print-latest enter-fakeroot
