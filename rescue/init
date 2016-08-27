@@ -1,0 +1,11 @@
+#!/bin/sh -x
+exec <>/dev/ttyGS0 >&0 2>&0
+export PATH
+busybox.static --install -s
+mkdir /proc
+mount -t proc proc /proc
+mkdir /sys
+mount -t sysfs sysfs /sys
+mkdir /mnt
+mkdir /
+exec sh
