@@ -40,6 +40,18 @@ img-$(FLAVOR)-fb.tar.gz:
 print-latest:
 	curl "$(DL_URL)/$(BRANCH)/$(FLAVOR)/latest"
 
+headless44.chp:
+	wget "https://s3-us-west-2.amazonaws.com/getchip.com/extension/$@"
+
+flashImages:
+	wget "http://flash.getchip.com/$@"
+
+repo/Release repo/Release.gpg:
+	cd $(@D) && wget "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/$(@F)"
+
+repo/Packages:
+	cd $(@D) && wget "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/main/binary-armhf/$(@F)"
+
 # also update boot-rescue script
 RK_VERSION := 4.4.11-ntc
 RK_REV_ARCH := 4.4.11-9_armhf
