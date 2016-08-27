@@ -51,7 +51,7 @@ rescue-rd.gz.img: rescue-rd.gz
 	mkimage -A arm -T ramdisk -n "rescue ramdisk" -d $< $@
 
 rescue-rd.gz: rescue/init rescue/bin/sh rescue/bin/busybox
-	cd rescue && find . -not -type d | cpio -ov --owner root:root | gzip > ../$@
+	cd rescue && find . | cpio -ov -R 0:0 -H newc | gzip > ../$@
 
 rescue/bin/sh: rescue/bin/busybox
 	ln -s busybox $@
