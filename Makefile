@@ -21,8 +21,8 @@ migrate-db:
 enter-fakeroot:
 	fakeroot -i rootfs.db -s rootfs.db
 
-do-update-init:
-	fakeroot -i rootfs.db -s rootfs.db ./update-init
+do-update-init: update-init
+	fakeroot -i rootfs.db -s rootfs.db ./$<
 	make rootfs.ubi.sparse
 
 enter-fastboot.scr: enter-fastboot.cmd

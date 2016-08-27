@@ -10,6 +10,10 @@
 	mv /sbin/init.stock /sbin/init &&
 	/var/lib/dpkg/info/base-passwd.preinst install &&
 	/var/lib/dpkg/info/dash.preinst install &&
+	# %%% export DEBIAN_FRONTEND=noninteractive &&
+	# %%% export DEBCONF_NONINTERACTIVE_SEEN=true &&
+	dpkg --configure mawk &&
+	dpkg --configure -a
 	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg --configure -a &&
 	systemctl enable getty@ttyGS0 &&
 	passwd &&
