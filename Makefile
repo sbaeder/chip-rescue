@@ -28,24 +28,37 @@ do-update-init: update-init
 enter-fastboot.scr: enter-fastboot.cmd
 	mkimage -A arm -T script -C none -n "enter fastboot" -d $< $@
 
-prebuilt:
+prebuilt: img-$(FLAVOR)-fb.tar.gz
 	mkdir $@
-	curl "$(DL_URL)/$(BRANCH)/$(FLAVOR)/$(CACHENUM)/img-$(FLAVOR)-fb.tar.gz" | \
-	tee $@/img-$(FLAVOR)-fb.tar.gz | \
-	tar -xzv --strip-components=2 -C $@ \
+	tar -xvf $< --strip-components=2 -C $@ \
 		img-$(FLAVOR)-fb/images/sunxi-spl.bin \
 		img-$(FLAVOR)-fb/images/u-boot-dtb.bin
+
+img-$(FLAVOR)-fb.tar.gz:
+	wget "$(DL_URL)/$(BRANCH)/$(FLAVOR)/$(CACHENUM)/$@"
 
 print-latest:
 	curl "$(DL_URL)/$(BRANCH)/$(FLAVOR)/latest"
 
+# also update boot-rescue script
+RK_VERSION := 4.4.11-ntc
+RK_REV_ARCH := 4.4.11-9_armhf
+BUSYBOX_VERSION := 1.24.2-r11
+
 # this depends on tmp existing from making rootfs.ubifs
-do-boot-rescue: boot-rescue boot-rescue.scr rescue-rd.gz.img
+do-boot-rescue: boot-rescue rescue-kernel boot-rescue.scr rescue-rd.gz.img
 	./$<
 
+rescue-kernel: linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb
+	mkdir $@
+	dpkg-deb --fsys-tarfile $< | \
+	tar -xv -C $@ \
+		./boot/vmlinuz-$(RK_VERSION) \
+		./usr/lib/linux-image-$(RK_VERSION)/sun5i-r8-chip.dtb
+
 # should write recipes to extract files from this instead of mooching off tmp
-linux-image-4.4.11-ntc_4.4.11-9_armhf.deb:
-	wget "http://opensource.nextthing.co/chip/debian/repo/pool/main/l/linux-4.4.11-ntc/linux-image-4.4.11-ntc_4.4.11-9_armhf.deb"
+linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb:
+	wget "http://opensource.nextthing.co/chip/debian/repo/pool/main/l/linux-$(RK_VERSION)/$@"
 
 rescue-rd.gz.img: rescue-rd.gz
 	mkimage -A arm -T ramdisk -n "rescue ramdisk" -d $< $@
@@ -56,13 +69,13 @@ rescue-rd.gz: rescue/init rescue/bin/sh rescue/bin/busybox rescue/dev rescue/pro
 rescue/bin/sh: rescue/bin/busybox
 	ln -s busybox $@
 
-rescue/bin/busybox: busybox-static-1.24.2-r11.apk
+rescue/bin/busybox: busybox-static-$(BUSYBOX_VERSION).apk
 	tar -xzvf $< -C rescue bin/busybox.static
 	mv rescue/bin/busybox.static $@
 	# reset modification time so we don't have to remake it
 	touch $@
 
-busybox-static-1.24.2-r11.apk:
+busybox-static-$(BUSYBOX_VERSION).apk:
 	wget "http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/armhf/$@"
 
 rescue/dev rescue/proc rescue/sys rescue/mnt:
