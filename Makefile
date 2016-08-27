@@ -50,7 +50,7 @@ linux-image-4.4.11-ntc_4.4.11-9_armhf.deb:
 rescue-rd.gz.img: rescue-rd.gz
 	mkimage -A arm -T ramdisk -n "rescue ramdisk" -d $< $@
 
-rescue-rd.gz: rescue/init rescue/bin/sh rescue/bin/busybox
+rescue-rd.gz: rescue/init rescue/bin/sh rescue/bin/busybox rescue/dev rescue/proc rescue/sys rescue/mnt
 	cd rescue && find . | cpio -ov -R 0:0 -H newc | gzip > ../$@
 
 rescue/bin/sh: rescue/bin/busybox
@@ -64,6 +64,9 @@ rescue/bin/busybox: busybox-static-1.24.2-r11.apk
 
 busybox-static-1.24.2-r11.apk:
 	wget "http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/armhf/$@"
+
+rescue/dev rescue/proc rescue/sys rescue/mnt:
+	mkdir $@
 
 boot-rescue.scr: boot-rescue.cmd
 	mkimage -A arm -T script -C none -n "boot to rescue ramdisk" -d $< $@

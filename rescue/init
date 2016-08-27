@@ -1,11 +1,9 @@
-#!/bin/sh -x
-exec <>/dev/ttyGS0 >&0 2>&0
+#!/bin/sh -e
 export PATH
-busybox.static --install -s
-mkdir /proc
+/bin/busybox --install -s /bin
+mount -t devtmpfs udev /dev
 mount -t proc proc /proc
-mkdir /sys
 mount -t sysfs sysfs /sys
-mkdir /mnt
-mkdir /
-exec sh
+mount -t ubifs /dev/ubi0_0 /mnt || true
+echo "Entering shell on /dev/ttyGS0" >/dev/kmsg
+exec sh <>/dev/ttyGS0 >&0 2>&0
