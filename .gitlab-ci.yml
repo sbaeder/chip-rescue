@@ -1,0 +1,12 @@
+image: debian:jessie
+
+compile:
+  script:
+    - apt-get update
+    - apt-get install -y make wget multistrap fakeroot mtd-utils android-tools-fsutils u-boot-tools
+    - make
+  artifacts:
+    paths:
+      - flash.tar.gz
+      - rootfs.ubi.sparse
+      - rescue.tar.gz

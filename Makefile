@@ -1,3 +1,5 @@
+release: flash.tar.gz rootfs.ubi.sparse rescue.tar.gz
+
 DL_URL := http://opensource.nextthing.co/chip/images
 FLAVOR := serv
 BRANCH := stable
@@ -5,6 +7,13 @@ CACHENUM := 1
 
 do-flash: flash prebuilt enter-fastboot.scr rootfs.ubi.sparse
 	./$<
+
+flash.tar.gz: flash prebuilt enter-fastboot.scr
+	tar -czvf $@ \
+		flash \
+		prebuilt/sunxi-spl.bin \
+		prebuilt/u-boot-dtb.bin \
+		enter-fastboot.scr
 
 rootfs.ubi.sparse: rootfs.ubi
 	img2simg $< $@ 2097152
@@ -58,8 +67,17 @@ RK_REV_ARCH := 4.4.11-9_armhf
 BUSYBOX_VERSION := 1.24.2-r11
 
 # this depends on tmp existing from making rootfs.ubifs
-do-boot-rescue: boot-rescue rescue-kernel boot-rescue.scr rescue-rd.gz.img
+do-boot-rescue: boot-rescue prebuilt rescue-kernel boot-rescue.scr rescue-rd.gz.img
 	./$<
+
+rescue.tar.gz: boot-rescue prebuilt rescue-kernel boot-rescue.scr rescue-rd.gz.img
+	tar -czvf $@ \
+		boot-rescue \
+		prebuilt/sunxi-spl.bin \
+		rescue-kernel/boot/vmlinuz-4.4.11-ntc \
+		rescue-kernel/usr/lib/linux-image-4.4.11-ntc/sun5i-r8-chip.dtb \
+		boot-rescue.scr \
+		rescue-rd.gz.img
 
 rescue-kernel: linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb
 	mkdir $@
@@ -96,5 +114,5 @@ rescue/dev rescue/proc rescue/sys rescue/mnt:
 boot-rescue.scr: boot-rescue.cmd
 	mkimage -A arm -T script -C none -n "boot to rescue ramdisk" -d $< $@
 
-.PHONY: migrate-db enter-fakeroot print-latest do-boot-rescue
+.PHONY: release do-flash migrate-db enter-fakeroot print-latest do-boot-rescue
 .INTERMEDIATE: rootfs.ubi rootfs.ubifs img-$(FLAVOR)-fb.tar.gz linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb rescue-rd.gz busybox-static-$(BUSYBOX_VERSION).apk
