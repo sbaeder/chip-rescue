@@ -7,25 +7,38 @@
 		read -r line
 		test "$line" = start && break
 	done
+	set -x
 
 	mv /sbin/init.stock /sbin/init &&
+
 	mount -t proc proc /proc &&
 	mount -t sysfs sysfs /sys &&
-	/var/lib/dpkg/info/base-passwd.preinst install &&
-	/var/lib/dpkg/info/dash.preinst install &&
-	dpkg --configure --force-configure-any mawk &&
-	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true dpkg --configure -a &&
+
+	(
+		export \
+			DEBIAN_FRONTEND=noninteractive \
+			DEBCONF_NONINTERACTIVE_SEEN=true \
+			LC_ALL=C LANGUAGE=C LANG=C
+		/var/lib/dpkg/info/base-passwd.preinst install &&
+		/var/lib/dpkg/info/dash.preinst install &&
+		dpkg --configure --force-configure-any mawk &&
+		dpkg --configure -a
+	) &&
+
 	systemctl enable getty@ttyGS0 &&
 	cat >>/etc/securetty <<EOF &&
 
 # USB serial gadgets
 ttyGS0
 EOF
+
 	read -p "Username for your account: " username &&
 	adduser --gecos "" "$username" &&
 	adduser "$username" sudo &&
 	adduser "$username" netdev &&
+
 	# systemd will remount these with safer options
 	umount /proc /sys &&
+
 	exec /sbin/init
 } || exec sh

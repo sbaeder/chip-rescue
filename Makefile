@@ -12,8 +12,8 @@ rootfs.ubi.sparse: rootfs.ubi
 rootfs.ubi: rootfs.ubifs ubinize.cfg
 	ubinize -o $@ -p 0x200000 -m 0x4000 ubinize.cfg
 
-rootfs.ubifs: multistrap.conf init.template
-	fakeroot -s rootfs.db ./buildrootfs
+rootfs.ubifs: buildrootfs multistrap.conf init.template
+	fakeroot -s rootfs.db ./$<
 
 migrate-db:
 	sed -i "s/dev=[^,]+/$$(stat -c %D tmp)/" rootfs.db
@@ -97,3 +97,4 @@ boot-rescue.scr: boot-rescue.cmd
 	mkimage -A arm -T script -C none -n "boot to rescue ramdisk" -d $< $@
 
 .PHONY: migrate-db enter-fakeroot print-latest do-boot-rescue
+.INTERMEDIATE: rootfs.ubi rootfs.ubifs img-$(FLAVOR)-fb.tar.gz linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb rescue-rd.gz busybox-static-$(BUSYBOX_VERSION).apk

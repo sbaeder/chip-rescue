@@ -1,6 +1,7 @@
 #!/bin/sh -eux
 rm -rf tmp
 multistrap -f multistrap.conf
+cp trusted.gpg tmp/etc/apt/trusted.gpg.d/ntc.gpg
 cp tmp/boot/vmlinuz-4.4.11-ntc tmp/boot/zImage
 cp tmp/usr/lib/linux-image-4.4.11-ntc/sun5i-r8-chip.dtb tmp/boot/sun5i-r8-chip.dtb
 mv tmp/sbin/init tmp/sbin/init.stock
