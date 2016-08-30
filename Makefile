@@ -93,7 +93,7 @@ linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb:
 rescue-rd.gz.img: rescue-rd.gz
 	mkimage -A arm -T ramdisk -n "rescue ramdisk" -d $< $@
 
-rescue-rd.gz: rescue/init rescue/bin/sh rescue/bin/busybox rescue/dev rescue/proc rescue/sys rescue/mnt
+rescue-rd.gz: rescue/init rescue/etc/inittab rescue/bin/sh rescue/bin/busybox rescue/dev rescue/proc rescue/sys rescue/mnt
 	cd rescue && find . | cpio -ov -R 0:0 -H newc | gzip > ../$@
 
 rescue/bin/sh: rescue/bin/busybox

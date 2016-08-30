@@ -5,5 +5,4 @@ mount -t devtmpfs udev /dev
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 mount -t ubifs /dev/ubi0_0 /mnt || true
-echo "Entering shell on /dev/ttyGS0" >/dev/kmsg
-exec sh <>/dev/ttyGS0 >&0 2>&0
+exec init
