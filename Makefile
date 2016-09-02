@@ -52,6 +52,9 @@ print-latest:
 headless44.chp:
 	wget "https://s3-us-west-2.amazonaws.com/getchip.com/extension/$@"
 
+h44.txt: headless44.chp unhowitzer.py
+	./unhowitzer.py <$< >$@
+
 flashImages:
 	wget "http://flash.getchip.com/$@"
 
