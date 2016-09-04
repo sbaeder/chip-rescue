@@ -9,7 +9,7 @@ chp = mmap.mmap(0, 0, prot=mmap.PROT_READ)
 def format_snippet(snippet):
 	h = re.sub(rb'..', b'\g<0> ', base64.b16encode(snippet))
 	a = re.sub(rb'[\x00-\x1f\x7f-\xff]', b'.', snippet)
-	return '%-48s %s' % (h.decode('ascii'), a.decode('ascii'))
+	return '%-96s %s' % (h.decode('ascii'), a.decode('ascii'))
 
 pos = 0
 while pos < len(chp):
@@ -24,12 +24,12 @@ while pos < len(chp):
 		pos += l2
 		print('ExpectComment %r' % comment.decode('ascii'))
 	elif command == 2:
-		snippet_len = min(16, l2)
+		snippet_len = min(32, l2)
 		snippet = chp[pos:pos+snippet_len]
 		pos += l2
 		print('ExpectRead  (0x%8X) << %s' % (l2, format_snippet(snippet)))
 	elif command == 3:
-		snippet_len = min(16, l2)
+		snippet_len = min(32, l2)
 		snippet = chp[pos:pos+snippet_len]
 		pos += l2
 		print('ExpectWrite (0x%8X) >> %s' % (l2, format_snippet(snippet)))
