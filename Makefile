@@ -77,6 +77,7 @@ rescue.tar.gz: boot-rescue prebuilt rescue-kernel boot-rescue.scr rescue-rd.gz.i
 	tar -czvf $@ \
 		boot-rescue \
 		prebuilt/sunxi-spl.bin \
+		prebuilt/u-boot-dtb.bin \
 		rescue-kernel/boot/vmlinuz-4.4.11-ntc \
 		rescue-kernel/usr/lib/linux-image-4.4.11-ntc/sun5i-r8-chip.dtb \
 		boot-rescue.scr \
