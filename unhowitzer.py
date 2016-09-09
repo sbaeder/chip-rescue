@@ -10,6 +10,15 @@ def format_snippet(snippet):
 	a = re.sub(rb'[\x00-\x1f\x7f-\xff]', b'.', snippet)
 	return '%-96s %s' % (h.decode('ascii'), a.decode('ascii'))
 
+def expect(t, first):
+	assert t[0] == first, t[0]
+	return t[1:]
+
+def get_singular(i):
+	for v in i:
+		pass
+	return v
+
 def discard(i):
 	for v in i:
 		pass
@@ -37,73 +46,67 @@ def parse_headers(source):
 		else:
 			raise ValueError('unsupported command %d' % command)
 
-def extract_awusb_read(source, headers, length):
+def extract_bulk_read(source, headers, length):
 	while length > 0:
-		command, start, end = headers.__next__()
-		assert command == 'ExpectRead'
-		yield (start, end)
+		start, end = expect(headers.__next__(), 'ExpectRead')
+		yield start, end
 		length -= end - start
 
-def extract_awusb_write(source, headers, length):
+def extract_bulk_write(source, headers, length):
 	while length > 0:
-		command, start, end = headers.__next__()
-		assert command == 'ExpectWrite'
-		yield (start, end)
+		start, end = expect(headers.__next__(), 'ExpectWrite')
+		yield start, end
 		length -= end - start
 
 def parse_awusb(source, headers):
 	while True:
 		# request
-		command, start, end = headers.__next__()
-		
-		assert command == 'ExpectWrite'
+		start, end = expect(headers.__next__(), 'ExpectWrite')
 		length, request = struct.unpack_from('<xxxxxxxxIxxxxHxxxxxxxxxxxxxx', source, start)
 		# payload
 		if request == 0x11:
-			yield 'read', extract_awusb_read(source, headers, length)
+			# print('    awusb_read') # %%%
+			yield 'read', extract_bulk_read(source, headers, length)
 		elif request == 0x12:
-			yield 'write', extract_awusb_write(source, headers, length)
+			# print('    awusb_write') # %%%
+			yield 'write', extract_bulk_write(source, headers, length)
 		else:
 			raise ValueError('unsupported USB request %d' % request)
 		# response
-		command, start, end = headers.__next__()
-		assert command == 'ExpectRead'
+		expect(headers.__next__(), 'ExpectRead')
 
 def parse_fel(source, headers):
 	awusb = parse_awusb(source, headers)
 	while True:
 		# request
-		rw, chunks = awusb.__next__()
-		assert rw == 'write'
-		start, end = chunks.__next__()
+		chunks, = expect(awusb.__next__(), 'write')
+		start, end = get_singular(chunks)
 		request, address, length = struct.unpack_from('<IIIxxxx', source, start)
-		discard(chunks)
 		# payload
 		if request == 0x1:
-			rw, chunks = awusb.__next__()
-			assert rw == 'read'
-			start, end = chunks.__next__()
+			# print('  fel_ver') # %%%
+			chunks, = expect(awusb.__next__(), 'read')
+			start, end = get_singular(chunks)
 			soc_id, protocol, scratchpad = struct.unpack_from('<xxxxxxxxIxxxxHxxIxxxxxxxx', source, start)
-			discard(chunks)
 			yield 'ver', soc_id, protocol, scratchpad
 		elif request == 0x101:
-			rw, chunks = awusb.__next__()
-			assert rw == 'write'
+			# print('  fel_write') # %%%
+			chunks, = expect(awusb.__next__(), 'write')
 			yield 'write', address, length, chunks
 		elif request == 0x102:
+			# print('  fel_exe') # %%%
 			yield 'exe', address
 		elif request == 0x103:
-			rw, chunks = awusb.__next__()
-			assert rw == 'read'
+			# print('  fel_read') # %%%
+			chunks, = expect(awusb.__next__(), 'read')
 			yield 'read', address, length, chunks
 		else:
 			raise ValueError('unsupported FEL request %d' % request)
 		# response
-		rw, chunks = awusb.__next__()
-		assert rw == 'read'
+		chunks, = expect(awusb.__next__(), 'read')
 		discard(chunks)
 
-# Keep this up to date with fel.c. They're about to change.
+# keep this up to date with fel.c. thunk addr and chunks are about to change.
 SPL_SOC_ID = 0x00162500
 SPL_THUNK_ADDR = 0xAE00
 SPL_CHUNKS = [
@@ -136,58 +139,58 @@ def extract_fel_spl(source, headers):
 
 def extract_fel_write(source, headers):
 	fel = parse_fel(source, headers)
-	request, address, length, chunks = fel.__next__()
-	assert request == 'write'
+	address, length, chunks = expect(fel.__next__(), 'write')
 	yield from chunks
 
 def extract_fastboot_flash(source, headers):
-	while True:
-		h = headers.__next__()
-		print(h) # %%%
-		command, start, end = h
-		assert command == 'ExpectWrite'
+	for header in headers:
+		start, end = expect(header, 'ExpectWrite')
 		fb_command = source[start:end]
-		print(fb_command) # %%%
+		print('fastboot', fb_command) # %%%
 		m = re.match(rb'download:(.{8})', fb_command)
 		if m is not None:
-			command, start, end = headers.__next__()
-			assert command == 'ExpectRead'
+			expect(headers.__next__(), 'ExpectRead')
 			length = int(m.group(1), 16)
-			yield from extract_awusb_write(source, headers, length)
-		command, start, end = headers.__next__()
-		assert command == 'ExpectRead'
-	# when do we stop?
+			yield from extract_bulk_write(source, headers, length)
+		expect(headers.__next__(), 'ExpectRead')
 
 def extract_files(source):
 	headers = parse_headers(source)
+	expect(headers.__next__(), 'MAGIC')
 	for header in headers:
-		if header[0] == 'MAGIC' or header[0] == 'Usleep':
-			pass
-		elif header[0] == 'ExpectComment':
-			comment = source[header[1]:header[2]]
-			words = comment.split(b', ')
-			print('comment %r' % words) # %%%
-			if words[0] == b'fel':
-				if words[1] == b'spl':
-					yield words[2].decode('ascii'), extract_fel_spl(source, headers)
-				elif words[1] == b'write':
-					yield words[3].decode('ascii'), extract_fel_write(source, headers)
-			elif words[0] == b'fastboot':
-				pos = 1
-				while pos < len(words):
-					if words[pos] == b'-i':
-						pos += 2
-					elif words[pos] == b'-u':
-						pos += 1
-					elif words[pos] == b'devices':
-						break
-					elif words[pos] == b'flash':
-						yield words[pos + 2].decode('ascii'), extract_fastboot_flash(source, headers)
-						break
-					else:
-						raise ValueError('unrecognized fastboot command %s' % comment)
-		elif header[0] == 'ExpectRead' or header[0] == 'ExpectWrite':
-			pass
+		start, end = expect(header, 'ExpectComment')
+		def generate_io_headers():
+			for header in headers:
+				# print('      io_header', header) # %%%
+				if header[0] == 'MAGIC':
+					break
+				yield header
+		io_headers = generate_io_headers()
+		comment = source[start:end]
+		words = comment.split(b', ')
+		print('comment %r' % words) # %%%
+		if words[0] == b'fel':
+			if words[1] == b'spl':
+				yield words[2].decode('ascii'), extract_fel_spl(source, io_headers)
+			elif words[1] == b'write':
+				yield words[3].decode('ascii'), extract_fel_write(source, io_headers)
+		elif words[0] == b'fastboot':
+			pos = 1
+			while pos < len(words):
+				if words[pos] == b'-i':
+					pos += 2
+				elif words[pos] == b'-u':
+					pos += 1
+				elif words[pos] == b'devices':
+					break
+				elif words[pos] == b'flash':
+					yield words[pos + 2].decode('ascii'), extract_fastboot_flash(source, io_headers)
+					break
+				elif words[pos] == b'continue':
+					break
+				else:
+					raise ValueError('unsupported fastboot command %s' % comment)
+		discard(io_headers)
 
 def print_files(source, files):
 	for name, chunks in files:
@@ -200,7 +203,7 @@ def save_files(source, files):
 			for start, end in chunks:
 				f.write(source[start:end])
 
-chp = mmap.mmap(0, 0, prot=mmap.PROT_READ)
+chp = mmap.mmap(3, 0, prot=mmap.PROT_READ)
 files = extract_files(chp)
 if True:
 	print_files(chp, files)
