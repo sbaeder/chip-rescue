@@ -2,12 +2,9 @@ image: debian:jessie
 
 compile:
   when: manual
-  cache:
-    paths:
-      - /var/cache/apt
   script:
-    - apt update
-    - apt install -y make wget multistrap fakeroot mtd-utils android-tools-fsutils u-boot-tools cpio
+    - apt-get update
+    - apt-get install -y make wget multistrap fakeroot mtd-utils android-tools-fsutils u-boot-tools cpio
     - make WGET_OPTS='--progress=dot:giga'
   artifacts:
     paths:
