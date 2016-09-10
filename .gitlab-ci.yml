@@ -3,9 +3,9 @@ image: debian:jessie
 compile:
   when: manual
   script:
-    - apt-get update
-    - apt-get install -y make wget multistrap fakeroot mtd-utils android-tools-fsutils u-boot-tools cpio
-    - make WGET_OPTS='--progress=bar'
+    - apt update
+    - apt install -y make wget multistrap fakeroot mtd-utils android-tools-fsutils u-boot-tools cpio
+    - make WGET_OPTS='--progress=dot:giga'
   artifacts:
     paths:
       - flash.tar.gz
