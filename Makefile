@@ -44,25 +44,25 @@ prebuilt: img-$(FLAVOR)-fb.tar.gz
 		img-$(FLAVOR)-fb/images/u-boot-dtb.bin
 
 img-$(FLAVOR)-fb.tar.gz:
-	wget "$(DL_URL)/$(BRANCH)/$(FLAVOR)/$(CACHENUM)/$@"
+	wget $(WGET_OPTS) "$(DL_URL)/$(BRANCH)/$(FLAVOR)/$(CACHENUM)/$@"
 
 print-latest:
 	curl "$(DL_URL)/$(BRANCH)/$(FLAVOR)/latest"
 
 headless44.chp:
-	wget "https://s3-us-west-2.amazonaws.com/getchip.com/extension/$@"
+	wget $(WGET_OPTS) "https://s3-us-west-2.amazonaws.com/getchip.com/extension/$@"
 
 h44.txt: headless44.chp print-chp.py
 	./print-chp.py <$< >$@
 
 flashImages:
-	wget "http://flash.getchip.com/$@"
+	wget $(WGET_OPTS) "http://flash.getchip.com/$@"
 
 repo/Release repo/Release.gpg:
-	cd $(@D) && wget "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/$(@F)"
+	cd $(@D) && wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/$(@F)"
 
 repo/Packages:
-	cd $(@D) && wget "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/main/binary-armhf/$(@F)"
+	cd $(@D) && wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/main/binary-armhf/$(@F)"
 
 # also update boot-rescue script
 RK_VERSION := 4.4.11-ntc
@@ -92,7 +92,7 @@ rescue-kernel: linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb
 
 # should write recipes to extract files from this instead of mooching off tmp
 linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb:
-	wget "http://opensource.nextthing.co/chip/debian/repo/pool/main/l/linux-$(RK_VERSION)/$@"
+	wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/pool/main/l/linux-$(RK_VERSION)/$@"
 
 rescue-rd.gz.img: rescue-rd.gz
 	mkimage -A arm -T ramdisk -n "rescue ramdisk" -d $< $@
@@ -110,7 +110,7 @@ rescue/bin/busybox: busybox-static-$(BUSYBOX_VERSION).apk
 	touch $@
 
 busybox-static-$(BUSYBOX_VERSION).apk:
-	wget "http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/armhf/$@"
+	wget $(WGET_OPTS) "http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/armhf/$@"
 
 rescue/dev rescue/proc rescue/sys rescue/mnt:
 	mkdir $@

@@ -5,7 +5,7 @@ compile:
   script:
     - apt-get update
     - apt-get install -y make wget multistrap fakeroot mtd-utils android-tools-fsutils u-boot-tools cpio
-    - make
+    - make WGET_OPTS='--progress=bar'
   artifacts:
     paths:
       - flash.tar.gz
