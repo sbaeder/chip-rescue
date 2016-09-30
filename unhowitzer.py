@@ -203,9 +203,9 @@ def save_files(source, files):
 			for start, end in chunks:
 				f.write(source[start:end])
 
-chp = mmap.mmap(3, 0, prot=mmap.PROT_READ)
+chp = mmap.mmap(0, 0, prot=mmap.PROT_READ)
 files = extract_files(chp)
-if True:
+if False:
 	print_files(chp, files)
 else:
 	save_files(chp, files)
