@@ -1,19 +1,16 @@
 release: flash.tar.gz rootfs.ubi.sparse rescue.tar.gz
 
 DL_URL := http://opensource.nextthing.co/chip/images
-FLAVOR := serv
+FLAVOR := server
 BRANCH := stable
-CACHENUM := 1
+CACHENUM := 124
+UBI_TYPE := 400000-4000
 
 do-flash: flash prebuilt enter-fastboot.scr rootfs.ubi.sparse
 	./$<
 
-flash.tar.gz: flash prebuilt enter-fastboot.scr
-	tar -czvf $@ \
-		flash \
-		prebuilt/sunxi-spl.bin \
-		prebuilt/u-boot-dtb.bin \
-		enter-fastboot.scr
+flash.tar.gz: flash prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin enter-fastboot.scr
+	tar -czvf $@ $+
 
 rootfs.ubi.sparse: rootfs.ubi
 	img2simg $< $@ 2097152
@@ -37,26 +34,20 @@ do-update-init: update-init
 enter-fastboot.scr: enter-fastboot.cmd
 	mkimage -A arm -T script -C none -n "enter fastboot" -d $< $@
 
-prebuilt: img-$(FLAVOR)-fb.tar.gz
-	mkdir $@
-	tar -xvf $< --strip-components=2 -C $@ \
-		img-$(FLAVOR)-fb/images/sunxi-spl.bin \
-		img-$(FLAVOR)-fb/images/u-boot-dtb.bin
-
-img-$(FLAVOR)-fb.tar.gz:
-	wget $(WGET_OPTS) "$(DL_URL)/$(BRANCH)/$(FLAVOR)/$(CACHENUM)/$@"
+prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin prebuilt/chip-$(UBI_TYPE).ubi.sparse:
+	cd $(@D) && wget $(WGET_OPTS) "$(DL_URL)/$(BRANCH)/$(FLAVOR)/$(CACHENUM)/$(@F)"
 
 print-latest:
 	curl "$(DL_URL)/$(BRANCH)/$(FLAVOR)/latest"
 
-headless44.chp:
-	wget $(WGET_OPTS) "https://s3-us-west-2.amazonaws.com/getchip.com/extension/$@"
+prebuilt/headless44.chp prebuilt/pocket44_01.chp:
+	cd $(@D) && wget $(WGET_OPTS) "https://s3-us-west-2.amazonaws.com/getchip.com/extension/$(@F)"
 
-h44.txt: headless44.chp print-chp.py
+prebuilt/p4401.txt: prebuilt/pocket44_01.chp print-chp.py
 	./print-chp.py <$< >$@
 
-flashImages:
-	wget $(WGET_OPTS) "http://flash.getchip.com/$@"
+prebuilt/flashImages:
+	cd $(@D) && wget $(WGET_OPTS) "http://flash.getchip.com/$(@F)"
 
 repo/Release repo/Release.gpg:
 	cd $(@D) && wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/$(@F)"
@@ -73,15 +64,8 @@ BUSYBOX_VERSION := 1.24.2-r11
 do-boot-rescue: boot-rescue prebuilt rescue-kernel boot-rescue.scr rescue-rd.gz.img
 	./$<
 
-rescue.tar.gz: boot-rescue prebuilt rescue-kernel boot-rescue.scr rescue-rd.gz.img
-	tar -czvf $@ \
-		boot-rescue \
-		prebuilt/sunxi-spl.bin \
-		prebuilt/u-boot-dtb.bin \
-		rescue-kernel/boot/vmlinuz-4.4.11-ntc \
-		rescue-kernel/usr/lib/linux-image-4.4.11-ntc/sun5i-r8-chip.dtb \
-		boot-rescue.scr \
-		rescue-rd.gz.img
+rescue.tar.gz: boot-rescue prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin rescue-kernel boot-rescue.scr rescue-rd.gz.img
+	tar -czvf $@ $+
 
 rescue-kernel: linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb
 	mkdir $@
@@ -90,7 +74,6 @@ rescue-kernel: linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb
 		./boot/vmlinuz-$(RK_VERSION) \
 		./usr/lib/linux-image-$(RK_VERSION)/sun5i-r8-chip.dtb
 
-# should write recipes to extract files from this instead of mooching off tmp
 linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb:
 	wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/pool/main/l/linux-$(RK_VERSION)/$@"
 
@@ -119,4 +102,4 @@ boot-rescue.scr: boot-rescue.cmd
 	mkimage -A arm -T script -C none -n "boot to rescue ramdisk" -d $< $@
 
 .PHONY: release do-flash migrate-db enter-fakeroot print-latest do-boot-rescue
-.INTERMEDIATE: rootfs.ubi rootfs.ubifs img-$(FLAVOR)-fb.tar.gz linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb rescue-rd.gz busybox-static-$(BUSYBOX_VERSION).apk
+.INTERMEDIATE: rootfs.ubi rootfs.ubifs linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb rescue-rd.gz busybox-static-$(BUSYBOX_VERSION).apk
