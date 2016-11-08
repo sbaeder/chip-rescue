@@ -46,6 +46,21 @@ prebuilt/headless44.chp prebuilt/pocket44_01.chp:
 prebuilt/p4401.txt: prebuilt/pocket44_01.chp print-chp.py
 	./print-chp.py <$< >$@
 
+prebuilt/pieces: prebuilt/pocket44_01.chp unhowitzer.py
+	mkdir $@
+	cd $@ && ./unhowitzer.py 3<$<
+
+prebuilt/rootfs.ubi: prebuilt/pieces densify.py
+	./densify.py 3<$</11-rootfs.ubi.sparse 4<>$@
+
+# https://github.com/NextThingCo/CHIP-mtd-utils/commits/by/1.5.2/next-mlc-debian
+CHIP-mtd-utils:
+	git clone https://github.com/NextThingCo/CHIP-mtd-utils.git
+	cd $@ && git checkout f6a16e575091ef315b147532ba818877fd2c1895
+
+CHIP-mtd-utils/ubi-utils/ubinize: | CHIP-mtd-utils
+	make -C CHIP-mtd-utils $$PWD/CHIP-mtd-utils/ubi-utils/ubinize
+
 prebuilt/flashImages:
 	cd $(@D) && wget $(WGET_OPTS) "http://flash.getchip.com/$(@F)"
 
