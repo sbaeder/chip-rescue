@@ -3,7 +3,7 @@ release: flash.tar.gz rootfs.ubi.sparse rescue.tar.gz
 DL_URL := http://opensource.nextthing.co/chip/images
 FLAVOR := server
 BRANCH := stable
-CACHENUM := 124
+CACHENUM := 129
 UBI_TYPE := 400000-4000
 
 do-flash: flash prebuilt enter-fastboot.scr rootfs.ubi.sparse
@@ -77,9 +77,9 @@ repo/Packages:
 	cd $(@D) && wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/main/binary-armhf/$(@F)"
 
 # also update boot-rescue script
-RK_VERSION := 4.4.11-ntc
-RK_REV_ARCH := 4.4.11-9_armhf
-BUSYBOX_VERSION := 1.24.2-r11
+RK_VERSION := 4.4.13-ntc-mlc
+RK_REV_ARCH := 4.4.13-53_armhf
+BUSYBOX_VERSION := 1.24.2-r12
 
 # this depends on tmp existing from making rootfs.ubifs
 do-boot-rescue: boot-rescue prebuilt rescue-kernel boot-rescue.scr rescue-rd.gz.img
