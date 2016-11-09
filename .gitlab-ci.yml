@@ -4,7 +4,7 @@ compile:
   when: manual
   script:
     - apt-get update
-    - apt-get install -y --no-install-recommends make wget multistrap fakeroot mtd-utils android-tools-fsutils u-boot-tools cpio git ca-certificates gcc
+    - apt-get install -y make wget multistrap fakeroot mtd-utils android-tools-fsutils u-boot-tools cpio git gcc
     - make WGET_OPTS='--progress=dot:giga'
   artifacts:
     paths:
