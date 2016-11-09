@@ -34,13 +34,16 @@ do-update-init: update-init
 enter-fastboot.scr: enter-fastboot.cmd
 	mkimage -A arm -T script -C none -n "enter fastboot" -d $< $@
 
-prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin prebuilt/chip-$(UBI_TYPE).ubi.sparse:
-	cd $(@D) && wget $(WGET_OPTS) "$(DL_URL)/$(BRANCH)/$(FLAVOR)/$(CACHENUM)/$(@F)"
-
 print-latest:
 	curl "$(DL_URL)/$(BRANCH)/$(FLAVOR)/latest"
 
-prebuilt/headless44.chp prebuilt/pocket44_01.chp:
+prebuilt:
+	mkdir $@
+
+prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin prebuilt/chip-$(UBI_TYPE).ubi.sparse: | prebuilt
+	cd $(@D) && wget $(WGET_OPTS) "$(DL_URL)/$(BRANCH)/$(FLAVOR)/$(CACHENUM)/$(@F)"
+
+prebuilt/headless44.chp prebuilt/pocket44_01.chp: | prebuilt
 	cd $(@D) && wget $(WGET_OPTS) "https://s3-us-west-2.amazonaws.com/getchip.com/extension/$(@F)"
 
 prebuilt/p4401.txt: prebuilt/pocket44_01.chp print-chp.py
@@ -70,10 +73,13 @@ do-patch-multistrap: fix-multistrap.patch | multistrap.orig
 prebuilt/flashImages:
 	cd $(@D) && wget $(WGET_OPTS) "http://flash.getchip.com/$(@F)"
 
-repo/Release repo/Release.gpg:
+repo:
+	mkdir $@
+
+repo/Release repo/Release.gpg: | repo
 	cd $(@D) && wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/$(@F)"
 
-repo/Packages:
+repo/Packages: | repo
 	cd $(@D) && wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/main/binary-armhf/$(@F)"
 
 # also update boot-rescue script
