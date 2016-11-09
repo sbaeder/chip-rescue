@@ -56,6 +56,9 @@ prebuilt/pieces: prebuilt/pocket44_01.chp unhowitzer.py
 prebuilt/rootfs.ubi: prebuilt/pieces densify.py
 	./densify.py 3<$</11-rootfs.ubi.sparse 4<>$@
 
+prebuilt/rootfs.ubifs: prebuilt/rootfs.ubi unubinize.py
+	./unubinize.py 3<$< 4<>$@
+
 # https://github.com/NextThingCo/CHIP-mtd-utils/commits/by/1.5.2/next-mlc-debian
 CHIP-mtd-utils:
 	git clone https://github.com/NextThingCo/CHIP-mtd-utils.git
