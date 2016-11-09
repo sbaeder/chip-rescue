@@ -13,10 +13,10 @@ flash.tar.gz: flash prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin enter-fastboo
 	tar -czvf $@ $+
 
 rootfs.ubi.sparse: rootfs.ubi
-	img2simg $< $@ 2097152
+	img2simg $< $@ 4194304
 
-rootfs.ubi: rootfs.ubifs ubinize.cfg
-	ubinize -o $@ -p 0x200000 -m 0x4000 ubinize.cfg
+rootfs.ubi: CHIP-mtd-utils/ubi-utils/ubinize rootfs.ubifs ubinize.cfg
+	./$< -o $@ -p 0x400000 -m 0x4000 -M dist3 ubinize.cfg
 
 rootfs.ubifs: buildrootfs multistrap.conf init.template
 	fakeroot -s rootfs.db ./$<
@@ -60,6 +60,12 @@ CHIP-mtd-utils:
 
 CHIP-mtd-utils/ubi-utils/ubinize: | CHIP-mtd-utils
 	make -C CHIP-mtd-utils $$PWD/CHIP-mtd-utils/ubi-utils/ubinize
+
+multistrap.orig:
+	cp /usr/sbin/multistrap $@
+
+do-patch-multistrap: fix-multistrap.patch | multistrap.orig
+	patch /usr/sbin/multistrap $<
 
 prebuilt/flashImages:
 	cd $(@D) && wget $(WGET_OPTS) "http://flash.getchip.com/$(@F)"
@@ -116,5 +122,5 @@ rescue/dev rescue/proc rescue/sys rescue/mnt:
 boot-rescue.scr: boot-rescue.cmd
 	mkimage -A arm -T script -C none -n "boot to rescue ramdisk" -d $< $@
 
-.PHONY: release do-flash migrate-db enter-fakeroot print-latest do-boot-rescue
+.PHONY: release do-flash migrate-db enter-fakeroot print-latest do-patch-multistrap do-boot-rescue
 .INTERMEDIATE: rootfs.ubi rootfs.ubifs linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb rescue-rd.gz busybox-static-$(BUSYBOX_VERSION).apk

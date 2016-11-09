@@ -1,0 +1,11 @@
+--- /usr/sbin/multistrap	2014-02-22 02:27:42.000000000 -0500
++++ multistrap.orig	2016-11-09 01:27:02.337335157 -0500
+@@ -986,7 +986,7 @@
+ 	}
+ 	# reinstall set
+ 	foreach my $reinst (sort @reinstall) {
+-		system ("$str $env chroot $dir apt-get --reinstall -y $forceyes install $reinst");
++		system ("$str $env chroot $dir apt-get --reinstall -y install $reinst");
+ 	}
+ 	&run_native_hooks_end(sort @{$hooks{'N'}}) if (defined $hooks{'N'});
+ 	return $retval;
