@@ -1,4 +1,5 @@
-release: flash.tar.gz rootfs.ubi.sparse rescue.tar.gz
+# release: flash.tar.gz rootfs.ubi.sparse rescue.tar.gz
+release: prebuilt/pocket44_01.squashfs
 
 DL_URL := http://opensource.nextthing.co/chip/images
 FLAVOR := server
@@ -59,6 +60,12 @@ prebuilt/rootfs.ubi: prebuilt/pieces densify.py
 prebuilt/rootfs.ubifs: prebuilt/rootfs.ubi unubinize.py
 	./unubinize.py 3<$< 4<>$@
 
+prebuilt/ubifs-root: prebuilt/rootfs.ubifs | ubi_reader
+	./ubi_reader/scripts/ubireader_extract_files -o $@ $<
+
+prebuilt/pocket44_01.squashfs: prebuilt/ubifs-root
+	mksquashfs $</*/* $@
+
 # https://github.com/NextThingCo/CHIP-mtd-utils/commits/by/1.5.2/next-mlc-debian
 CHIP-mtd-utils:
 	git clone https://github.com/NextThingCo/CHIP-mtd-utils.git
@@ -66,6 +73,9 @@ CHIP-mtd-utils:
 
 CHIP-mtd-utils/ubi-utils/ubinize: | CHIP-mtd-utils
 	make -C CHIP-mtd-utils $$PWD/CHIP-mtd-utils/ubi-utils/ubinize
+
+ubi_reader:
+	git clone https://github.com/jrspruitt/ubi_reader
 
 multistrap.orig:
 	cp /usr/sbin/multistrap $@
