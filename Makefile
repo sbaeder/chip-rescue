@@ -61,7 +61,7 @@ prebuilt/rootfs.ubifs: prebuilt/rootfs.ubi unubinize.py
 	./unubinize.py 3<$< 4<>$@
 
 prebuilt/ubifs-root: prebuilt/rootfs.ubifs | ubi_reader
-	./ubi_reader/scripts/ubireader_extract_files -o $@ $<
+	PYTHONPATH=./ubi_reader ./ubi_reader/scripts/ubireader_extract_files -o $@ $<
 
 prebuilt/pocket44_01.squashfs: prebuilt/ubifs-root
 	mksquashfs $</*/* $@
