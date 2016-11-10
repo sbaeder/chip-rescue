@@ -52,7 +52,7 @@ prebuilt/p4401.txt: prebuilt/pocket44_01.chp print-chp.py
 
 prebuilt/pieces: prebuilt/pocket44_01.chp unhowitzer.py
 	mkdir $@
-	cd $@ && ./unhowitzer.py 3<$<
+	cd $@ && ./unhowitzer.py 3<../$(<F)
 
 prebuilt/rootfs.ubi: prebuilt/pieces densify.py
 	./densify.py 3<$</11-rootfs.ubi.sparse 4<>$@
