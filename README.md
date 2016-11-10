@@ -5,9 +5,9 @@ They're all related to [this computer](https://www.getchip.com/pages/chip).
 ## A root filesystem flashing tool
 There's a tool for flashing just a root filesystem.
 This is released as `flash.tar.gz`.
-You'd unpack it, plug in your C.H.I.P in FEL mode, and run `./flash`, which will flash the `rootfs.ubi.sparse` file to the UBI partition.
+You'd unpack it, plug in your C.H.I.P. in FEL mode, and run `./flash`, which will flash the `rootfs.ubi.sparse` file to the UBI partition.
 It uses the prebuilt SPL and U-Boot images from Next Thing.
-The point is to avoid rewriting the SPL, SPL backup, and U-Boot partitions when we don't have anything to chagne.
+The point is to avoid rewriting the SPL, SPL backup, U-Boot, and U-Boot environment partitions when we don't have anything to change.
 
 ## A Debian root filesystem
 There's an experimental root filesystem with Debian on it.
