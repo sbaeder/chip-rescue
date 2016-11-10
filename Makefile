@@ -143,3 +143,4 @@ boot-rescue.scr: boot-rescue.cmd
 
 .PHONY: release do-flash migrate-db enter-fakeroot print-latest do-patch-multistrap do-boot-rescue
 .INTERMEDIATE: rootfs.ubi rootfs.ubifs linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb rescue-rd.gz busybox-static-$(BUSYBOX_VERSION).apk
+.INTERMEDIATE: prebuilt/pocket44_01.chp prebuilt/pieces prebuilt/rootfs.ubi prebuilt/rootfs.ubifs prebuilt/ubifs-root
