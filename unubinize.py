@@ -24,6 +24,7 @@ the_vol_id = 0
 print('extracting image_seq 0x%08X, vol_id %d' % (the_image_seq, the_vol_id))
 
 seen = {}
+end = -1
 
 os.ftruncate(4, 0)
 os.ftruncate(4, image_sz)
@@ -56,6 +57,9 @@ def check_vid_hdr(i, j, vid_base):
 	else:
 		print('peb %d leb %d writes lnum %d sqnum %d' % (i, j, lnum, sqnum))
 	seen[lnum] = sqnum
+	global end
+	if lnum > end:
+		end = lnum
 	return lnum
 
 for i in range(peb_cnt):
@@ -64,10 +68,13 @@ for i in range(peb_cnt):
 		continue
 	vid_base = peb_base + MIN_IO_SIZE
 	upper_vid_magic, = struct.unpack_from('>I', src, vid_base + UBI_VID_HDR_SIZE)
-	if upper_vid_magic == 0x00000000:
-		lnum = check_vid_hdr(i, 0, vid_base)
+	if upper_vid_magic == 0x00000000 or upper_vid_magic == 0xffffffff:
+		lnum = check_vid_hdr(i, 9, vid_base)
 		if lnum is not None:
-			for dp, sp in enumerate(range(3, PEB_SIZE // MIN_IO_SIZE // 2 - 2, 2)):
+			# 0-1 3 5
+			#  / / /
+			# 2 4 6-7
+			for dp, sp in enumerate(range(3, PEB_SIZE // MIN_IO_SIZE - 2, 2)):
 				page_base = peb_base + sp * MIN_IO_SIZE
 				dst[lnum * LEB_SIZE + dp * MIN_IO_SIZE:lnum * LEB_SIZE + dp * MIN_IO_SIZE + MIN_IO_SIZE] = src[page_base:page_base + MIN_IO_SIZE]
 	else:
@@ -77,3 +84,8 @@ for i in range(peb_cnt):
 				leb_base = peb_base + 2 * MIN_IO_SIZE + j * LEB_SIZE
 				dst[lnum * LEB_SIZE:lnum * LEB_SIZE + LEB_SIZE] = src[leb_base:leb_base + LEB_SIZE]
 # todo: missed blocks should be filled with ff
+
+dst.close()
+src.close()
+
+os.ftruncate(4, (end + 1) * LEB_SIZE)
