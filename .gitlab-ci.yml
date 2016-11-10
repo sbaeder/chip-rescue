@@ -11,3 +11,4 @@ compile:
       - flash.tar.gz
       - rootfs.ubi.sparse
       - rescue.tar.gz
+      - prebuilt/pocket44_01.squashfs

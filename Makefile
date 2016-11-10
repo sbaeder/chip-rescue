@@ -1,5 +1,4 @@
-# release: flash.tar.gz rootfs.ubi.sparse rescue.tar.gz
-release: prebuilt/pocket44_01.squashfs
+release: flash.tar.gz rootfs.ubi.sparse rescue.tar.gz prebuilt/pocket44_01.squashfs
 
 DL_URL := http://opensource.nextthing.co/chip/images
 FLAVOR := server
