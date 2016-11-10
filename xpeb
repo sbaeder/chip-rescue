@@ -1,0 +1,7 @@
+#!/bin/sh -eu
+base=$(( $2 * 0x400000 ))
+xxd -l  64 -s $(( $base + 0x000000 )) $1 # ec hdr
+xxd -l  64 -s $(( $base + 0x004000 )) $1 # vid hdr 0
+xxd -l  64 -s $(( $base + 0x004040 )) $1 # vid hdr 1
+xxd -l 172 -s $(( $base + 0x008000 )) $1 # leb 0
+xxd -l 172 -s $(( $base + 0x200000 )) $1 # leb 1

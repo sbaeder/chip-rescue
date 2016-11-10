@@ -1,0 +1,6 @@
+#!/bin/sh -eu
+base=$(( $2 * 0x1f8000 ))
+xxd -l 24 -s $(( $base + 0x0000 )) $1 # page 0
+xxd -l 24 -s $(( $base + 0x4000 )) $1 # page 1
+xxd -l 24 -s $(( $base + 0x8000 )) $1 # page 2
+xxd -l 24 -s $(( $base + 0xc000 )) $1 # page 3
