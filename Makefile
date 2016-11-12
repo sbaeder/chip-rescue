@@ -63,7 +63,7 @@ prebuilt/ubifs-root: prebuilt/rootfs.ubifs | ubi_reader
 	PYTHONPATH=./ubi_reader ./ubi_reader/scripts/ubireader_extract_files -o $@ $<
 
 prebuilt/pocket44_01.squashfs: prebuilt/ubifs-root
-	mksquashfs $</*/* $@
+	mksquashfs $< $@
 
 # https://github.com/NextThingCo/CHIP-mtd-utils/commits/by/1.5.2/next-mlc-debian
 CHIP-mtd-utils:
