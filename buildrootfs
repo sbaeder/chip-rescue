@@ -1,9 +1,30 @@
 #!/bin/sh -eux
 rm -rf tmp
 multistrap -f multistrap.conf
+
 cp trusted.gpg tmp/etc/apt/trusted.gpg.d/ntc.gpg
+
 cp tmp/boot/vmlinuz-4.4.13-ntc-mlc tmp/boot/zImage
 cp tmp/usr/lib/linux-image-4.4.13-ntc-mlc/sun5i-r8-chip.dtb tmp/boot/sun5i-r8-chip.dtb
+
+cat >>tmp/etc/securetty <<EOF &&
+
+# USB serial gadgets
+ttyGS0
+EOF
+
+cat >>tmp/etc/NetworkManager/NetworkManager.conf <<EOF &&
+
+[keyfile]
+unmanaged-devices=interface-name:wlan1
+
+[device]
+wifi.scan-rand-mac-address=no
+EOF
+
+sed -i 's/PrivateNetwork=yes/PrivateNetwork=no/' tmp/lib/systemd/system/systemd-hostnamed.service
+
 mv tmp/sbin/init tmp/sbin/init.stock
 cp init.template tmp/sbin/init
+
 mkfs.ubifs -r tmp -m 0x4000 -e 0x1f8000 -c 2000 -o rootfs.ubifs
