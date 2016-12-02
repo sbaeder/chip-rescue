@@ -1,16 +1,46 @@
 image: debian:jessie
 
-compile:
+flash:
+  when: manual
+  script:
+    - rm /etc/apt/apt.conf.d/docker-clean
+    - apt-get update
+    - apt-get install --no-install-recommends make wget u-boot-tools
+    - make -k WGET_OPTS='--progress=dot:giga' flash.tar.gz
+  artifacts:
+    paths:
+      - flash.tar.gz
+
+rootfs:
   when: manual
   script:
     - rm /etc/apt/apt.conf.d/docker-clean
     - rm /etc/apt/apt.conf.d/docker-gzip-indexes
     - apt-get update
-    - apt-get install -y make wget multistrap fakeroot mtd-utils android-tools-fsutils u-boot-tools cpio git gcc python-lzo python3 squashfs-tools
-    - make -k WGET_OPTS='--progress=dot:giga'
+    - apt-get install -y make git ca-certificates gcc libc-dev fakeroot multistrap mtd-utils android-tools-fsutils
+    - make -k WGET_OPTS='--progress=dot:giga' rootfs.ubi.sparse
   artifacts:
     paths:
-      - flash.tar.gz
       - rootfs.ubi.sparse
+
+rescue:
+  when: manual
+  script:
+    - rm /etc/apt/apt.conf.d/docker-clean
+    - apt-get update
+    - apt-get install --no-install-recommends make wget cpio u-boot-tools
+    - make -k WGET_OPTS='--progress=dot:giga' rescue.tar.gz
+  artifacts:
+    paths:
       - rescue.tar.gz
+
+repack:
+  when: manual
+  script:
+    - rm /etc/apt/apt.conf.d/docker-clean
+    - apt-get update
+    - apt-get install --no-install-recommends make git ca-certificates wget python3 python python-lzo squashfs-tools
+    - make -k WGET_OPTS='--progress=dot:giga' prebuilt/pocket44_01.squashfs
+  artifacts:
+    paths:
       - prebuilt/pocket44_01.squashfs
