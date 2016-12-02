@@ -101,7 +101,7 @@ RK_REV_ARCH := 4.4.13-53_armhf
 BUSYBOX_VERSION := 1.24.2-r12
 
 # this depends on tmp existing from making rootfs.ubifs
-do-boot-rescue: boot-rescue prebuilt rescue-kernel boot-rescue.scr rescue-rd.gz.img
+do-boot-rescue: boot-rescue prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin rescue-kernel boot-rescue.scr rescue-rd.gz.img
 	./$<
 
 rescue.tar.gz: boot-rescue prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin rescue-kernel boot-rescue.scr rescue-rd.gz.img
