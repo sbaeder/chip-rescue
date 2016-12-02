@@ -97,6 +97,7 @@ repo/Packages: | repo
 # also update boot-rescue script
 RK_VERSION := 4.4.13-ntc-mlc
 RK_REV_ARCH := 4.4.13-53_armhf
+# https://pkgs.alpinelinux.org/packages?name=busybox-static&arch=armhf
 BUSYBOX_VERSION := 1.24.2-r12
 
 # this depends on tmp existing from making rootfs.ubifs
