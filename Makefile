@@ -4,7 +4,7 @@ DL_URL := http://opensource.nextthing.co/chip/images
 FLAVOR := server
 BRANCH := stable
 CACHENUM := 129
-UBI_TYPE := 400000-4000
+UBI_TYPE := 400000-4000-680
 
 do-flash: flash prebuilt enter-fastboot.scr rootfs.ubi.sparse
 	./$<
