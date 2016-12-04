@@ -6,7 +6,7 @@ BRANCH := stable
 CACHENUM := 129
 UBI_TYPE := 400000-4000-680
 
-do-flash: flash prebuilt enter-fastboot.scr rootfs.ubi.sparse
+do-flash: flash prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin enter-fastboot.scr rootfs.ubi.sparse
 	./$<
 
 flash.tar.gz: flash prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin enter-fastboot.scr
