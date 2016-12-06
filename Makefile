@@ -3,7 +3,7 @@ release: flash.tar.gz rootfs.ubi.sparse rescue.tar.gz prebuilt/pocket44_01.squas
 DL_URL := http://opensource.nextthing.co/chip/images
 FLAVOR := server
 BRANCH := stable
-CACHENUM := 129
+CACHENUM := 141
 UBI_TYPE := 400000-4000-680
 
 do-flash: flash prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin enter-fastboot.scr rootfs.ubi.sparse
