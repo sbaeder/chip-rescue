@@ -35,3 +35,9 @@ while pos < len(chp):
 		print('ExpectWrite (0x%8X) >> %s' % (l2, format_snippet(snippet)))
 	elif command == 4:
 		print('Usleep %d' % l1)
+	elif command == 5:
+		manifest = chp[pos:pos+l2]
+		pos += l2
+		print('ExpectManifest %r' % manifest.decode('ascii'))
+	else:
+		raise ValueError

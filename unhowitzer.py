@@ -34,6 +34,7 @@ HeaderExpectComment = collections.namedtuple('HeaderExpectComment', ['start', 'e
 HeaderExpectRead = collections.namedtuple('HeaderExpectRead', ['start', 'end'])
 HeaderExpectWrite = collections.namedtuple('HeaderExpectWrite', ['start', 'end'])
 HeaderUsleep = collections.namedtuple('HeaderUsleep', ['duration'])
+HeaderExpectManifest = collections.namedtuple('HeaderExpectManifest', ['start', 'end'])
 
 def parse_headers(source):
 	pos = 0
@@ -55,6 +56,9 @@ def parse_headers(source):
 			pos += l2
 		elif command == 4:
 			yield HeaderUsleep(l1)
+		elif command == 5:
+			yield HeaderExpectManifest(pos, pos + l2)
+			pos += l2
 		else:
 			raise ValueError('unsupported command %d' % command)
 
@@ -229,7 +233,7 @@ def handle(source, magic, comment, io_headers):
 	comment_bytes = source[comment.start:comment.end]
 	# print(comment_bytes.decode('ascii')) # %%%
 	words = comment_bytes.split(b', ')
-	if words[0] == b'fel':
+	if words[0] == b'fel' or words[0] == b'sunxi-fel':
 		return handle_fel(source, words, io_headers)
 	elif words[0] == b'fastboot' or words[0] == b'/usr/local/bin/fastboot':
 		return handle_fastboot(source, words, io_headers)
