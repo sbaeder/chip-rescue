@@ -88,7 +88,7 @@ prebuilt/flashImages:
 repo:
 	mkdir $@
 
-repo/Release repo/Release.gpg: | repo
+repo/InRelease: | repo
 	cd $(@D) && wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/$(@F)"
 
 repo/Packages: | repo
