@@ -1,4 +1,4 @@
-image: debian:stretch
+image: debian:jessie
 
 flash:
   when: manual
@@ -25,6 +25,7 @@ rootfs:
 
 modules:
   when: manual
+  image: debian:stretch
   script:
     - rm /etc/apt/apt.conf.d/docker-clean
     - apt-get update
