@@ -1,12 +1,12 @@
-image: debian:jessie
+image: debian:stretch
 
 flash:
   when: manual
   script:
     - rm /etc/apt/apt.conf.d/docker-clean
     - apt-get update
-    - apt-get install --no-install-recommends make wget u-boot-tools
-    - make -k WGET_OPTS='--progress=dot:giga' flash.tar.gz
+    - apt-get install -y --no-install-recommends make wget u-boot-tools
+    - make WGET_OPTS='--progress=dot:giga' flash.tar.gz
   artifacts:
     paths:
       - flash.tar.gz
@@ -17,19 +17,30 @@ rootfs:
     - rm /etc/apt/apt.conf.d/docker-clean
     - rm /etc/apt/apt.conf.d/docker-gzip-indexes
     - apt-get update
-    - apt-get install -y make git ca-certificates gcc libc-dev fakeroot multistrap mtd-utils android-tools-fsutils
-    - make -k WGET_OPTS='--progress=dot:giga' rootfs.ubi.sparse
+    - apt-get install -y --no-install-recommends make git ca-certificates gcc libc-dev fakeroot multistrap mtd-utils android-tools-fsutils
+    - make WGET_OPTS='--progress=dot:giga' rootfs.ubi.sparse
   artifacts:
     paths:
       - rootfs.ubi.sparse
+
+modules:
+  when: manual
+  script:
+    - rm /etc/apt/apt.conf.d/docker-clean
+    - apt-get update
+    - apt-get install -y --no-install-recommends make ca-certificates wget gcc libc-dev gcc-arm-linux-gnueabihf bc
+    - make WGET_OPTS='--progress=dot:giga' modules.tar.gz
+  artifacts:
+    paths:
+      - prebuilt/server.squashfs
 
 rescue:
   when: manual
   script:
     - rm /etc/apt/apt.conf.d/docker-clean
     - apt-get update
-    - apt-get install --no-install-recommends make wget cpio u-boot-tools
-    - make -k WGET_OPTS='--progress=dot:giga' rescue.tar.gz
+    - apt-get install -y --no-install-recommends make wget cpio u-boot-tools
+    - make WGET_OPTS='--progress=dot:giga' rescue.tar.gz
   artifacts:
     paths:
       - rescue.tar.gz
@@ -39,8 +50,8 @@ repack:
   script:
     - rm /etc/apt/apt.conf.d/docker-clean
     - apt-get update
-    - apt-get install --no-install-recommends make git ca-certificates wget python3 python python-lzo squashfs-tools
-    - make -k WGET_OPTS='--progress=dot:giga' prebuilt/pocket44_01.squashfs
+    - apt-get install -y --no-install-recommends make git ca-certificates wget python3 python python-lzo squashfs-tools
+    - make WGET_OPTS='--progress=dot:giga' prebuilt/server.squashfs
   artifacts:
     paths:
-      - prebuilt/pocket44_01.squashfs
+      - prebuilt/server.squashfs

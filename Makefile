@@ -1,9 +1,9 @@
-release: flash.tar.gz rootfs.ubi.sparse rescue.tar.gz prebuilt/pocket44_01.squashfs
+release: flash.tar.gz rootfs.ubi.sparse modules.tar.gz rescue.tar.gz
 
 DL_URL := http://opensource.nextthing.co/chip/images
 FLAVOR := server
 BRANCH := stable
-CACHENUM := 141
+CACHENUM := 149
 UBI_TYPE := 400000-4000-680
 
 do-flash: flash prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin enter-fastboot.scr rootfs.ubi.sparse
@@ -34,6 +34,38 @@ do-update-init: update-init
 enter-fastboot.scr: enter-fastboot.cmd
 	mkimage -A arm -T script -C none -n "enter fastboot" -d $< $@
 
+# also update boot-rescue script
+KERNEL_VERSION := 4.4.13-ntc-mlc
+KERNEL_REV_ARCH := 4.4.13-58_armhf
+
+modules.tar.gz: CHIP-linux-debian-$(KERNEL_VERSION)/drivers/md/dm-crypt.ko
+	tar -czvf $@ --owner=root --group=root -C CHIP-linux-debian-$(KERNEL_VERSION) \
+		drivers/md/dm-crypt.ko
+
+CHIP-linux-debian-$(KERNEL_VERSION)/drivers/md/dm-crypt.ko: | CHIP-linux-debian-$(KERNEL_VERSION)
+	make -C CHIP-linux-debian-$(KERNEL_VERSION) ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOCALVERSION=-ntc-mlc drivers/md/dm-crypt.ko
+
+CHIP-linux-debian-$(KERNEL_VERSION): $(KERNEL_VERSION).tar.gz linux-image/boot/config-$(KERNEL_VERSION)
+	tar -xf $<
+	cp linux-image/boot/config-$(KERNEL_VERSION) $@/.config
+	echo CONFIG_DM_CRYPT=m >>$@/.config
+	make -C CHIP-linux-debian-$(KERNEL_VERSION) ARCH=arm olddefconfig
+	make -C CHIP-linux-debian-$(KERNEL_VERSION) ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- prepare
+
+$(KERNEL_VERSION).tar.gz:
+	wget $(WGET_OPTS) "https://github.com/NextThingCo/CHIP-linux/archive/debian/$@"
+
+linux-image/boot/vmlinuz-% linux-image/usr/lib/linux-image-%/sun5i-r8-chip.dtb linux-image/boot/config-%: linux-image-%_$(KERNEL_REV_ARCH).deb
+	mkdir linux-image
+	dpkg-deb --fsys-tarfile $< | \
+	tar -xv -C linux-image \
+		./boot/vmlinuz-$* \
+		./usr/lib/linux-image-$*/sun5i-r8-chip.dtb \
+		./boot/config-$*
+
+linux-image-$(KERNEL_VERSION)_$(KERNEL_REV_ARCH).deb:
+	wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/pool/main/l/linux-$(KERNEL_VERSION)/$@"
+
 print-latest:
 	curl "$(DL_URL)/$(BRANCH)/$(FLAVOR)/latest"
 
@@ -49,20 +81,32 @@ prebuilt/headless44.chp prebuilt/pocket44_01.chp: | prebuilt
 prebuilt/p4401.txt: prebuilt/pocket44_01.chp print-chp.py
 	./print-chp.py <$< >$@
 
-prebuilt/pieces: prebuilt/pocket44_01.chp unhowitzer.py
+prebuilt/pocket-pieces: prebuilt/pocket44_01.chp unhowitzer.py
 	mkdir $@
 	cd $@ && ../../unhowitzer.py 3<../$(<F)
 
-prebuilt/rootfs.ubi: prebuilt/pieces densify.py
+prebuilt/pocket.ubi: prebuilt/pocket-pieces densify.py
 	./densify.py 3<$</11-rootfs.ubi.sparse 4<>$@
 
-prebuilt/rootfs.ubifs: prebuilt/rootfs.ubi unubinize.py
+prebuilt/pocket.ubifs: prebuilt/pocket.ubi unubinize.py
 	./unubinize.py 3<$< 4<>$@
 
-prebuilt/ubifs-root: prebuilt/rootfs.ubifs | ubi_reader
+prebuilt/pocket-root: prebuilt/pocket.ubifs | ubi_reader
 	PYTHONPATH=./ubi_reader ./ubi_reader/scripts/ubireader_extract_files -o $@ $<
 
-prebuilt/pocket44_01.squashfs: prebuilt/ubifs-root
+prebuilt/pocket44_01.squashfs: prebuilt/pocket-root
+	mksquashfs $< $@
+
+prebuilt/server.ubi: prebuilt/chip-$(UBI_TYPE).ubi.sparse
+	simg2img $< $@
+
+prebuilt/server.ubifs: prebuilt/server.ubi unubinize.py
+	./unubinize.py 3<$< 4<>$@
+
+prebuilt/server-root: prebuilt/server.ubifs | ubi_reader
+	PYTHONPATH=./ubi_reader ./ubi_reader/scripts/ubireader_extract_files -o $@ $<
+
+prebuilt/server.squashfs: prebuilt/server-root
 	mksquashfs $< $@
 
 # https://github.com/NextThingCo/CHIP-mtd-utils/commits/by/1.5.2/next-mlc-debian
@@ -94,28 +138,15 @@ repo/InRelease: | repo
 repo/Packages: | repo
 	cd $(@D) && wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/dists/jessie/main/binary-armhf/$(@F)"
 
-# also update boot-rescue script
-RK_VERSION := 4.4.13-ntc-mlc
-RK_REV_ARCH := 4.4.13-53_armhf
 # https://pkgs.alpinelinux.org/packages?name=busybox-static&arch=armhf
-BUSYBOX_VERSION := 1.24.2-r12
+BUSYBOX_VERSION := 1.25.1-r0
 
 # this depends on tmp existing from making rootfs.ubifs
-do-boot-rescue: boot-rescue prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin rescue-kernel boot-rescue.scr rescue-rd.gz.img
+do-boot-rescue: boot-rescue prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin linux-image/boot/vmlinuz-$(KERNEL_VERSION) linux-image/usr/lib/linux-image-$(KERNEL_VERSION)/sun5i-r8-chip.dtb boot-rescue.scr rescue-rd.gz.img
 	./$<
 
-rescue.tar.gz: boot-rescue prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin rescue-kernel boot-rescue.scr rescue-rd.gz.img
+rescue.tar.gz: boot-rescue prebuilt/sunxi-spl.bin prebuilt/u-boot-dtb.bin linux-image/boot/vmlinuz-$(KERNEL_VERSION) linux-image/usr/lib/linux-image-$(KERNEL_VERSION)/sun5i-r8-chip.dtb boot-rescue.scr rescue-rd.gz.img
 	tar -czvf $@ $+
-
-rescue-kernel: linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb
-	mkdir $@
-	dpkg-deb --fsys-tarfile $< | \
-	tar -xv -C $@ \
-		./boot/vmlinuz-$(RK_VERSION) \
-		./usr/lib/linux-image-$(RK_VERSION)/sun5i-r8-chip.dtb
-
-linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb:
-	wget $(WGET_OPTS) "http://opensource.nextthing.co/chip/debian/repo/pool/main/l/linux-$(RK_VERSION)/$@"
 
 rescue-rd.gz.img: rescue-rd.gz
 	mkimage -A arm -T ramdisk -n "rescue ramdisk" -d $< $@
@@ -142,5 +173,8 @@ boot-rescue.scr: boot-rescue.cmd
 	mkimage -A arm -T script -C none -n "boot to rescue ramdisk" -d $< $@
 
 .PHONY: release do-flash migrate-db enter-fakeroot print-latest do-patch-multistrap do-boot-rescue
-.INTERMEDIATE: rootfs.ubi rootfs.ubifs linux-image-$(RK_VERSION)_$(RK_REV_ARCH).deb rescue-rd.gz busybox-static-$(BUSYBOX_VERSION).apk
-.INTERMEDIATE: prebuilt/pocket44_01.chp prebuilt/pieces prebuilt/rootfs.ubi prebuilt/rootfs.ubifs prebuilt/ubifs-root
+.INTERMEDIATE: rootfs.ubi rootfs.ubifs
+.INTERMEDIATE: linux-image-$(KERNEL_VERSION)_$(KERNEL_REV_ARCH).deb
+.INTERMEDIATE: rescue-rd.gz.img rescue-rd.gz busybox-static-$(BUSYBOX_VERSION).apk
+.INTERMEDIATE: prebuilt/pocket44_01.chp prebuilt/pocket.ubi prebuilt/pocket.ubifs
+.INTERMEDIATE: prebuilt/chip-$(UBI_TYPE).ubi.sparse prebuilt/server.ubi prebuilt/server.ubifs
