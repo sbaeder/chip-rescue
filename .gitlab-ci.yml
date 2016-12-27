@@ -32,7 +32,7 @@ modules:
     - make WGET_OPTS='--progress=dot:giga' modules.tar.gz
   artifacts:
     paths:
-      - prebuilt/server.squashfs
+      - modules.tar.gz
 
 rescue:
   when: manual
@@ -50,7 +50,7 @@ repack:
   script:
     - rm /etc/apt/apt.conf.d/docker-clean
     - apt-get update
-    - apt-get install -y --no-install-recommends make git ca-certificates wget python3 python python-lzo squashfs-tools
+    - apt-get install -y --no-install-recommends make git ca-certificates wget android-tools-fsutils python3 python python-lzo squashfs-tools
     - make WGET_OPTS='--progress=dot:giga' prebuilt/server.squashfs
   artifacts:
     paths:
