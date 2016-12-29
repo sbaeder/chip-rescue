@@ -43,7 +43,7 @@ modules.tar.gz: CHIP-linux-debian-$(KERNEL_VERSION)/drivers/md/dm-crypt.ko
 		drivers/md/dm-crypt.ko
 
 CHIP-linux-debian-$(KERNEL_VERSION)/drivers/md/dm-crypt.ko: | CHIP-linux-debian-$(KERNEL_VERSION)
-	make -C CHIP-linux-debian-$(KERNEL_VERSION) ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOCALVERSION=-ntc-mlc drivers/md/dm-crypt.ko
+	make -C CHIP-linux-debian-$(KERNEL_VERSION) ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOCALVERSION=-ntc-mlc KCFLAGS=-fno-pie drivers/md/dm-crypt.ko
 
 CHIP-linux-debian-$(KERNEL_VERSION): $(KERNEL_VERSION).tar.gz linux-image/boot/config-$(KERNEL_VERSION)
 	tar -xf $<
