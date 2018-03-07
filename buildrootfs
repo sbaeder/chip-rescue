@@ -12,13 +12,13 @@ multistrap -f multistrap.conf
 cp tmp/boot/vmlinuz-4.4.13-ntc-mlc tmp/boot/zImage
 cp tmp/usr/lib/linux-image-4.4.13-ntc-mlc/sun5i-r8-chip.dtb tmp/boot/sun5i-r8-chip.dtb
 
-cat >>tmp/etc/securetty <<EOF &&
+cat >>tmp/etc/securetty <<EOF
 
 # USB serial gadgets
 ttyGS0
 EOF
 
-cat >>tmp/etc/NetworkManager/NetworkManager.conf <<EOF &&
+cat >>tmp/etc/NetworkManager/NetworkManager.conf <<EOF
 
 [keyfile]
 unmanaged-devices=interface-name:wlan1
