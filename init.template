@@ -39,7 +39,7 @@ EOF
 		dpkg --configure -a
 	) &&
 
-	systemctl enable getty@ttyGS0 &&
+	systemctl enable serial-getty@ttyGS0 &&
 
 	read -p "Username for your account: " username &&
 	adduser --gecos "" "$username" &&
