@@ -1,8 +1,13 @@
 #!/bin/sh -eux
 rm -rf tmp
-multistrap -f multistrap.conf
 
+mkdir tmp tmp/etc tmp/etc/apt tmp/etc/apt/trusted.gpg.d tmp/etc/apt/apt.conf.d
 cp trusted.gpg tmp/etc/apt/trusted.gpg.d/ntc.gpg
+cat >tmp/etc/apt/apt.conf.d/71ntcsha1 <<EOF
+APT::Hashes::SHA1::Weak "yes";
+EOF
+
+multistrap -f multistrap.conf
 
 cp tmp/boot/vmlinuz-4.4.13-ntc-mlc tmp/boot/zImage
 cp tmp/usr/lib/linux-image-4.4.13-ntc-mlc/sun5i-r8-chip.dtb tmp/boot/sun5i-r8-chip.dtb
